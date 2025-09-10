@@ -37,12 +37,17 @@ A modern and interactive web application built with Streamlit that enables real-
    pip install -r requirements.txt
    ```
 
-3. **Configure environment variables**
+3. **Configure secrets**
    
-   Create a `.env` file in the project root:
-   ```env
-   WEATHERLINK_API_KEY=your_api_key_here
-   WEATHERLINK_API_SECRET=your_api_secret_here
+   Create a `.streamlit` folder and `secrets.toml` file in the project root:
+   ```bash
+   mkdir .streamlit
+   ```
+   
+   Create `.streamlit/secrets.toml`:
+   ```toml
+   WEATHERLINK_API_KEY = "your_api_key_here"
+   WEATHERLINK_API_SECRET = "your_api_secret_here"
    ```
 
 4. **Run the application**
@@ -56,10 +61,12 @@ A modern and interactive web application built with Streamlit that enables real-
 
 ## 🔧 Configuration
 
-### Environment Variables
+### Streamlit Secrets
 
 - `WEATHERLINK_API_KEY`: Your WeatherLink API key
 - `WEATHERLINK_API_SECRET`: Your WeatherLink API secret
+
+Configure these in `.streamlit/secrets.toml` for local development, or in your Streamlit Cloud dashboard for deployment.
 
 ### Stations
 
@@ -71,7 +78,6 @@ Stations are automatically loaded from your WeatherLink API account. Make sure y
 - **weatherlinkv2**: Custom library for WeatherLink API
 - **Plotly**: Interactive charts
 - **Pandas**: Data manipulation
-- **python-dotenv**: Environment variables management
 
 ## 📝 Usage
 

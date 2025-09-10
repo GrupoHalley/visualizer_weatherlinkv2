@@ -31,8 +31,9 @@ MANIFEST
 # Jupyter Notebook
 .ipynb_checkpoints
 
-# Streamlit
+# Streamlit secrets and config
 .streamlit/
+secrets.toml
 
 # IDE
 .vscode/

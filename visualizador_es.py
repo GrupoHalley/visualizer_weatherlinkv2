@@ -5,13 +5,9 @@ import plotly.express as px
 import datetime
 from weatherlinkv2 import WeatherLinkAPI, parse_weather_data
 import time
-from dotenv import load_dotenv
-import os
 
-load_dotenv()
-
-API_KEY = os.getenv("WEATHERLINK_API_KEY")
-API_SECRET = os.getenv("WEATHERLINK_API_SECRET")
+API_KEY = st.secrets["WEATHERLINK_API_KEY"]
+API_SECRET = st.secrets["WEATHERLINK_API_SECRET"]
 
 # Inicializar api
 api = WeatherLinkAPI(api_key=API_KEY, api_secret=API_SECRET, demo_mode=False)

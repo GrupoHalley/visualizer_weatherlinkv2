@@ -13,9 +13,6 @@ numpy>=1.24.0
 # Data visualization
 plotly>=5.15.0
 
-# Environment variable handling
-python-dotenv>=1.0.0
-
 # Date and time utilities
 datetime
 
