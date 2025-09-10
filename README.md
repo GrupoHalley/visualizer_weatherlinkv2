@@ -1,6 +1,6 @@
 # 🌤️ Davis Weather Stations Visualizer
 
-Interactive web application to visualize real-time meteorological and air quality data from Davis WeatherLink stations.
+A modern and interactive web application built with Streamlit that enables real-time monitoring, analysis, and visualization of meteorological and air quality data from multiple Davis WeatherLink stations. This professional tool facilitates tracking of environmental variables through dynamic charts, cross-station comparisons, and flexible temporal analysis, making it ideal for researchers, students, and weather enthusiasts who need quick and efficient access to up-to-date meteorological data.
 
 ## 📋 Features
 
