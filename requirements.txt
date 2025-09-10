@@ -1,0 +1,27 @@
+# Dependencies for the Davis weather station visualizer
+
+# Web framework
+streamlit>=1.28.0
+
+# Custom library for WeatherLink API
+weatherlinkv2
+
+# Data manipulation and analysis
+pandas>=1.5.0
+numpy>=1.24.0
+
+# Data visualization
+plotly>=5.15.0
+
+# Environment variable handling
+python-dotenv>=1.0.0
+
+# Date and time utilities
+datetime
+
+# Requests for HTTP calls (dependency of weatherlinkv2)
+requests>=2.31.0
+
+# Optional: for improved visualizations
+matplotlib>=3.6.0
+seaborn>=0.12.0
