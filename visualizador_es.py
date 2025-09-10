@@ -26,7 +26,6 @@ st.title("🌤️ Monitoreo en Tiempo Real - Estaciones Davis")
 
 # Sidebar para configuración
 with st.sidebar:
-    refresh_rate = st.selectbox("Frecuencia de actualización", [30, 60, 300], index=1)
     stations = st.multiselect("Seleccionar estaciones", options=station_options)
     # Seleccionar modo de consulta de tiempo
     query_mode = st.radio("Modo de consulta", ["Últimas horas", "Rango de fechas"], index=0)
