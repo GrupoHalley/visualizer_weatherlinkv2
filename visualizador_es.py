@@ -20,25 +20,25 @@ station_options = stations_df["station_name"].tolist()
 station_options.sort()
 station_id_map = dict(zip(stations_df["station_name"], stations_df["station_id"]))
 
-st.set_page_config(page_title="Estaciones Meteorológicas", layout="wide")
+st.set_page_config(page_title="Estaciones Meteorológicas", layout="wide", initial_sidebar_state="expanded")
 
 # CSS para diseño responsive
 st.markdown("""
 <style>
-    /* Hacer que las columnas se adapten en pantallas pequeñas */
-    @media (max-width: 1000px) {
-        .stColumns > div {
+    /* Hacer que las columnas se adapten cuando hay menos de 1100px */
+    @media (max-width: 1100px) {
+        .stColumn {
             width: 100% !important;
             margin-bottom: 1rem;
         }
         
-        /* Ajustar el sidebar en móviles */
+        /* Ajustar el sidebar en pantallas pequeñas */
         .css-1d391kg {
             width: 100% !important;
             margin-bottom: 1rem;
         }
         
-        /* Títulos más pequeños en móviles */
+        /* Títulos más pequeños */
         h1 {
             font-size: 1.5rem !important;
         }
@@ -46,9 +46,69 @@ st.markdown("""
         h3 {
             font-size: 1.2rem !important;
         }
+        
+        /* Botones más pequeños */
+        .stButton > button {
+            font-size: 0.8rem !important;
+            padding: 0.4rem 0.8rem !important;
+            height: auto !important;
+        }
+        
+        /* Alertas y warnings más compactas */
+        .stAlert > div {
+            font-size: 0.85rem !important;
+            padding: 0.5rem !important;
+        }
+        
+        /* Texto general más pequeño */
+        .stMarkdown p {
+            font-size: 0.9rem !important;
+        }
+        
+        /* Selectbox y inputs más compactos */
+        .stSelectbox label, .stMultiSelect label, .stRadio label, .stNumberInput label {
+            font-size: 0.85rem !important;
+        }
+        
+        /* Captions más pequeñas */
+        .caption {
+            font-size: 0.75rem !important;
+        }
+        
+        /* Gráficas más pequeñas */
+        .plotly-graph-div {
+            min-height: 280px !important;
+        }
+        
+        /* Espaciado reducido */
+        .block-container {
+            padding-top: 1rem !important;
+            padding-bottom: 1rem !important;
+        }
     }
     
-    /* Optimizar gráficas para mejor visualización */
+    /* Ajustes para pantallas muy pequeñas */
+    @media (max-width: 480px) {
+        h1 {
+            font-size: 1.3rem !important;
+        }
+        
+        .stButton > button {
+            font-size: 0.75rem !important;
+            padding: 0.3rem 0.6rem !important;
+        }
+        
+        .stAlert > div {
+            font-size: 0.8rem !important;
+            padding: 0.4rem !important;
+        }
+        
+        .stMarkdown p {
+            font-size: 0.85rem !important;
+        }
+    }
+    
+    /* Configuración base para gráficas */
     .plotly-graph-div {
         width: 100% !important;
         height: auto !important;
