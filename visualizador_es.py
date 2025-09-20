@@ -26,7 +26,7 @@ st.set_page_config(page_title="Estaciones Meteorológicas", layout="wide")
 st.markdown("""
 <style>
     /* Hacer que las columnas se adapten en pantallas pequeñas */
-    @media (max-width: 768px) {
+    @media (max-width: 1000px) {
         .stColumns > div {
             width: 100% !important;
             margin-bottom: 1rem;
