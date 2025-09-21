@@ -124,7 +124,6 @@ if stations:  # Solo procesar si hay estaciones seleccionadas
                 xanchor="right",
                 x=1
             ),
-            hovermode='x unified'
         )
         return fig
     
