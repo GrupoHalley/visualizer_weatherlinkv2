@@ -1,10 +1,8 @@
-# streamlit_app.py
 import streamlit as st
 import pandas as pd
 import plotly.express as px
 import datetime
 from weatherlinkv2 import WeatherLinkAPI, parse_weather_data
-import time
 import io
 
 API_KEY = st.secrets["WEATHERLINK_API_KEY"]
@@ -21,117 +19,6 @@ station_options.sort()
 station_id_map = dict(zip(stations_df["station_name"], stations_df["station_id"]))
 
 st.set_page_config(page_title="Estaciones Meteorológicas", layout="wide", initial_sidebar_state="expanded")
-
-# CSS para diseño responsive
-st.markdown("""
-<style>
-    /* Hacer que las columnas se adapten cuando hay menos de 1100px */
-    @media (max-width: 1100px) {
-        .stColumn {
-            width: 100% !important;
-            margin-bottom: 1rem;
-        }
-        
-        /* Ajustar el sidebar en pantallas pequeñas */
-        .css-1d391kg {
-            width: 100% !important;
-            margin-bottom: 1rem;
-        }
-        
-        /* Títulos más pequeños */
-        h1 {
-            font-size: 1.5rem !important;
-        }
-        
-        h3 {
-            font-size: 1.2rem !important;
-        }
-        
-        /* Botones más pequeños */
-        .stButton > button {
-            font-size: 0.8rem !important;
-            padding: 0.4rem 0.8rem !important;
-            height: auto !important;
-        }
-        
-        /* Alertas y warnings más compactas */
-        .stAlert > div {
-            font-size: 0.85rem !important;
-            padding: 0.5rem !important;
-        }
-        
-        /* Texto general más pequeño */
-        .stMarkdown p {
-            font-size: 0.9rem !important;
-        }
-        
-        /* Selectbox y inputs más compactos */
-        .stSelectbox label, .stMultiSelect label, .stRadio label, .stNumberInput label {
-            font-size: 0.85rem !important;
-        }
-        
-        /* Captions más pequeñas */
-        .caption {
-            font-size: 0.75rem !important;
-        }
-        
-        /* Gráficas más pequeñas */
-        .plotly-graph-div {
-            min-height: 280px !important;
-        }
-        
-        /* Espaciado reducido */
-        .block-container {
-            padding-top: 1rem !important;
-            padding-bottom: 1rem !important;
-        }
-    }
-    
-    /* Ajustes para pantallas muy pequeñas */
-    @media (max-width: 480px) {
-        h1 {
-            font-size: 1.3rem !important;
-        }
-        
-        .stButton > button {
-            font-size: 0.75rem !important;
-            padding: 0.3rem 0.6rem !important;
-        }
-        
-        .stAlert > div {
-            font-size: 0.8rem !important;
-            padding: 0.4rem !important;
-        }
-        
-        .stMarkdown p {
-            font-size: 0.85rem !important;
-        }
-    }
-    
-    /* Configuración base para gráficas */
-    .plotly-graph-div {
-        width: 100% !important;
-        height: auto !important;
-        min-height: 350px;
-    }
-    
-    /* Mejorar la apariencia del sidebar */
-    .css-1d391kg {
-        background-color: #f8f9fa;
-        border-radius: 10px;
-        padding: 1rem;
-        margin-bottom: 1rem;
-    }
-    
-    /* Espaciado consistente */
-    .block-container {
-        padding-top: 2rem;
-        padding-bottom: 2rem;
-    }
-</style>
-""", unsafe_allow_html=True)
-
-# Configurar auto-refresh
 st.title("🌤️ Monitoreo en Tiempo Real - Estaciones Davis")
 
 # Sidebar para configuración
@@ -153,7 +40,7 @@ with col_update:
         # Limpiar el área de contenido
         st.empty()
 
-# Preparar datos para descarga si hay estaciones seleccionadas
+# Preparar datos y descargas si hay estaciones seleccionadas
 if stations:
     # Procesar datos para obtener df
     dfs = []
@@ -224,8 +111,7 @@ if stations:
         st.stop()
 
 if stations:  # Solo procesar si hay estaciones seleccionadas
-    # Función para crear gráficas con configuración responsive
-    def create_responsive_chart(fig, title_suffix=""):
+    def create_responsive_chart(fig):
         fig.update_layout(
             autosize=True,
             margin=dict(l=20, r=20, t=40, b=20),
@@ -243,7 +129,6 @@ if stations:  # Solo procesar si hay estaciones seleccionadas
         return fig
     
     # Layout responsive para las gráficas
-    # En pantallas grandes: 2 columnas, en móviles: 1 columna
     col1, col2 = st.columns([1, 1], gap="medium")
     
     with col1:
@@ -277,7 +162,7 @@ if stations:  # Solo procesar si hay estaciones seleccionadas
         st.plotly_chart(fig_pm1, use_container_width=True, key="pm1_chart", config={'responsive': True})
 
 else:
-    # Mensaje de bienvenida con mejor diseño
+    # Mensaje de bienvenida
     st.markdown("""
     <div style="text-align: center; padding: 2rem; border-radius: 10px; margin: 1rem 0;">
         <h3>🚀 ¡Bienvenido al Visualizador de Estaciones Meteorológicas!</h3>
@@ -286,3 +171,32 @@ else:
         </p>
     </div>
     """, unsafe_allow_html=True)
+
+# CSS para diseño responsive
+st.markdown("""
+<style>
+    /* Hacer que las columnas se adapten cuando hay menos de 1100px */
+    @media (max-width: 1100px) {
+        .stColumn {
+            width: 100% !important;
+            margin-bottom: 1rem;
+        }
+
+        /* Títulos más pequeños */
+        h1 {
+            font-size: 1.5rem !important;
+        }
+        
+        h3 {
+            font-size: 1.2rem !important;
+        }
+        
+        /* Alertas y warnings más compactas */
+        .stAlert > div {
+            font-size: 0.85rem !important;
+            padding: 0.5rem !important;
+        }
+    }
+
+</style>
+""", unsafe_allow_html=True)
