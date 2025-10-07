@@ -21,16 +21,72 @@ station_id_map = dict(zip(stations_df["station_name"], stations_df["station_id"]
 st.set_page_config(page_title="Estaciones Meteorológicas", layout="wide", initial_sidebar_state="expanded")
 st.title("🌤️ Monitoreo en Tiempo Real - Estaciones Davis")
 
+# Configuración de sensores
+SENSOR_CONFIG = {
+    "AirLink": {
+        "sensor_type": 323,
+        "data_structure_type": 17,
+        "variables": ['temperature_c', 'humidity_pct', 'pm25_ugm3', 'pm1_ugm3'],
+        "labels": {
+            'temperature_c': 'Temperatura (°C)',
+            'humidity_pct': 'Humedad (%)',
+            'pm25_ugm3': 'PM2.5 (μg/m³)',
+            'pm1_ugm3': 'PM1 (μg/m³)'
+        }
+    },
+    "Vantage Vue": {
+        "sensor_type": 37,
+        "data_structure_type": 24,
+        "variables": ['temperature_c', 'humidity_pct', 'rainfall_mm', 'wind_speed_kmh'],
+        "labels": {
+            'temperature_c': 'Temperatura (°C)',
+            'humidity_pct': 'Humedad (%)',
+            'rainfall_mm': 'Lluvia (mm)',
+            'wind_speed_kmh': 'Velocidad del Viento (km/h)'
+        }
+    },
+    "Vantage Pro2": {
+        "sensor_type": 23,
+        "data_structure_type": 4,
+        "variables": ['temperature_out_c', 'humidity_out_pct', 'rainfall_mm', 'wind_speed_kmh'],
+        "labels": {
+            'temperature_out_c': 'Temperatura (°C)',
+            'humidity_out_pct': 'Humedad (%)',
+            'rainfall_mm': 'Lluvia (mm)',
+            'wind_speed_kmh': 'Velocidad del Viento (km/h)'
+        }
+    }
+}
+
+# Configuración especial para estaciones específicas
+STATION_SENSOR_OVERRIDE = {
+    "219679": {"AirLink": {"sensor_type": 326, "data_structure_type": 17}},
+    "84759": {"required_sensor": "Vantage Pro2"}  # Solo funciona con Vantage Pro2
+}
+
 # Sidebar para configuración
 with st.sidebar:
     stations = st.multiselect("Seleccionar estaciones", options=station_options)
+    
+    # Selector de tipo de sensor
+    sensor_type = st.radio(
+        "Tipo de sensor",
+        options=["AirLink", "Vantage Vue", "Vantage Pro2"],
+        index=0,
+        help="Selecciona el tipo de sensor a consultar"
+    )
+    
     # Seleccionar modo de consulta de tiempo
     query_mode = st.radio("Modo de consulta", ["Últimas horas", "Rango de fechas"], index=0)
     if query_mode == "Últimas horas":
         hours_back = st.number_input("Horas anteriores", min_value=1, value=24)
+        # En modo "Últimas horas" siempre cargamos los datos
+        load_data = True
     else:
         start_date = st.date_input("Fecha inicio", datetime.date.today() - datetime.timedelta(days=1))
         end_date = st.date_input("Fecha fin", datetime.date.today())
+        # Botón para aplicar el rango de fechas
+        load_data = st.button("📅 Aplicar fechas", use_container_width=True)
 
 # Auto-refresh y botones de descarga
 col_update, col_csv, col_excel = st.columns([3, 1.2, 1.2])
@@ -40,22 +96,49 @@ with col_update:
         # Limpiar el área de contenido
         st.empty()
 
-# Preparar datos y descargas si hay estaciones seleccionadas
-if stations:
+# Preparar datos y descargas si hay estaciones seleccionadas y se debe cargar
+if stations and load_data:
     # Procesar datos para obtener df
     dfs = []
-    missing = []  # estaciones sin datos
+    missing = []
+    
     for station in stations:
         station_id = station_id_map.get(station)
+        station_id_str = str(station_id)
+        
+        # Obtener configuración del sensor
+        sensor_config = SENSOR_CONFIG[sensor_type].copy()
+        
+        # Verificar override para estaciones específicas
+        if station_id_str in STATION_SENSOR_OVERRIDE:
+            override = STATION_SENSOR_OVERRIDE[station_id_str]
+            
+            # Si la estación requiere un sensor específico
+            if "required_sensor" in override:
+                if sensor_type != override["required_sensor"]:
+                    st.warning(f"⚠️ La estación {station} (ID: {station_id}) solo funciona con {override['required_sensor']}")
+                    missing.append(station)
+                    continue
+            
+            # Si hay override de parámetros para este sensor
+            if sensor_type in override:
+                sensor_config["sensor_type"] = override[sensor_type]["sensor_type"]
+                sensor_config["data_structure_type"] = override[sensor_type]["data_structure_type"]
+        
         # Obtener histórico según modo de consulta
         if query_mode == "Últimas horas":
-            hist_json = api.get_historic_data(station_id=str(station_id), hours_back=int(hours_back))
+            hist_json = api.get_historic_data(station_id=station_id_str, hours_back=int(hours_back))
         elif query_mode == "Rango de fechas":
-            # Convertir fechas a timestamp Unix
             start_ts = int(datetime.datetime.combine(start_date, datetime.time()).timestamp())
             end_ts = int(datetime.datetime.combine(end_date, datetime.time()).timestamp())
-            hist_json = api.get_historic_data(station_id=str(station_id), start_timestamp=start_ts, end_timestamp=end_ts)
-        df_i = parse_weather_data(hist_json, sensor_type=323, data_structure_type=17)
+            hist_json = api.get_historic_data(station_id=station_id_str, start_timestamp=start_ts, end_timestamp=end_ts)
+        
+        # Parsear datos con la configuración del sensor
+        df_i = parse_weather_data(
+            hist_json, 
+            sensor_type=sensor_config["sensor_type"], 
+            data_structure_type=sensor_config["data_structure_type"]
+        )
         if df_i.empty:
             missing.append(station)
             continue
@@ -68,17 +151,17 @@ if stations:
     if dfs:
         df = pd.concat(dfs)
         
-        # Preparar datos para descarga (solo las 4 variables principales)
-        download_df = df[['station_name', 'temperature_c', 'humidity_pct', 'pm25_ugm3', 'pm1_ugm3']].copy()
+        # Preparar datos para descarga con las variables del sensor seleccionado
+        selected_vars = SENSOR_CONFIG[sensor_type]["variables"]
+        available_vars = [var for var in selected_vars if var in df.columns]
+        download_columns = ['station_name'] + available_vars
+        
+        download_df = df[download_columns].copy()
         download_df.reset_index(inplace=True)
-        download_df = download_df.rename(columns={
-            'ts': 'timestamp',
-            'station_name': 'station',
-            'temperature_c': 'temperature_c',
-            'humidity_pct': 'humidity_pct',
-            'pm25_ugm3': 'pm25_ugm3',
-            'pm1_ugm3': 'pm1_ugm3'
-        })
+        
+        # Renombrar columnas para formato Python-friendly
+        rename_dict = {'ts': 'timestamp', 'station_name': 'station'}
+        download_df = download_df.rename(columns=rename_dict)
         
         with col_csv:
             # Preparar CSV
@@ -110,7 +193,7 @@ if stations:
         st.warning("Selecciona al menos una estación para visualizar los datos")
         st.stop()
 
-if stations:  # Solo procesar si hay estaciones seleccionadas
+if stations and load_data:
     def create_responsive_chart(fig):
         fig.update_layout(
             autosize=True,
@@ -127,49 +210,76 @@ if stations:  # Solo procesar si hay estaciones seleccionadas
         )
         return fig
     
-    # Layout responsive para las gráficas
+    # Obtener variables y etiquetas del sensor seleccionado
+    variables = SENSOR_CONFIG[sensor_type]["variables"]
+    labels = SENSOR_CONFIG[sensor_type]["labels"]
+    
+    # Crear gráficas dinámicamente según las variables disponibles
     col1, col2 = st.columns([1, 1], gap="medium")
     
+    # Primera fila: primeras 2 variables
     with col1:
-        fig_temp = px.line(df, x=df.index, y='temperature_c', color='station_name', 
-                          title='Temperatura (°C)',
-                          labels={'index': 'Tiempo', 'temperature_c': 'Temperatura (°C)', 'station_name': 'Estación'})
-        fig_temp = create_responsive_chart(fig_temp)
-        st.plotly_chart(fig_temp, use_container_width=True, key="temp_chart", config={'responsive': True})
+        var1 = variables[0]
+        if var1 in df.columns:
+            fig1 = px.line(df, x=df.index, y=var1, color='station_name', 
+                          title=labels[var1],
+                          labels={'index': 'Tiempo', var1: labels[var1], 'station_name': 'Estación'})
+            fig1 = create_responsive_chart(fig1)
+            st.plotly_chart(fig1, use_container_width=True, key=f"chart_{var1}", config={'responsive': True})
     
     with col2:
-        fig_humidity = px.line(df, x=df.index, y='humidity_pct', color='station_name', 
-                              title='Humedad (%)',
-                              labels={'index': 'Tiempo', 'humidity_pct': 'Humedad (%)', 'station_name': 'Estación'})
-        fig_humidity = create_responsive_chart(fig_humidity)
-        st.plotly_chart(fig_humidity, use_container_width=True, key="humidity_chart", config={'responsive': True})
+        var2 = variables[1]
+        if var2 in df.columns:
+            fig2 = px.line(df, x=df.index, y=var2, color='station_name', 
+                          title=labels[var2],
+                          labels={'index': 'Tiempo', var2: labels[var2], 'station_name': 'Estación'})
+            fig2 = create_responsive_chart(fig2)
+            st.plotly_chart(fig2, use_container_width=True, key=f"chart_{var2}", config={'responsive': True})
     
+    # Segunda fila: últimas 2 variables
     col3, col4 = st.columns([1, 1], gap="medium")
     
     with col3:
-        fig_pm25 = px.line(df, x=df.index, y='pm25_ugm3', color='station_name', 
-                          title='PM2.5 (μg/m³)',
-                          labels={'index': 'Tiempo', 'pm25_ugm3': 'PM2.5 (μg/m³)', 'station_name': 'Estación'})
-        fig_pm25 = create_responsive_chart(fig_pm25)
-        st.plotly_chart(fig_pm25, use_container_width=True, key="pm25_chart", config={'responsive': True})
+        if len(variables) > 2:
+            var3 = variables[2]
+            if var3 in df.columns:
+                fig3 = px.line(df, x=df.index, y=var3, color='station_name', 
+                              title=labels[var3],
+                              labels={'index': 'Tiempo', var3: labels[var3], 'station_name': 'Estación'})
+                fig3 = create_responsive_chart(fig3)
+                st.plotly_chart(fig3, use_container_width=True, key=f"chart_{var3}", config={'responsive': True})
     
     with col4:
-        fig_pm1 = px.line(df, x=df.index, y='pm1_ugm3', color='station_name', 
-                         title='PM1 (μg/m³)',
-                         labels={'index': 'Tiempo', 'pm1_ugm3': 'PM1 (μg/m³)', 'station_name': 'Estación'})
-        fig_pm1 = create_responsive_chart(fig_pm1)
-        st.plotly_chart(fig_pm1, use_container_width=True, key="pm1_chart", config={'responsive': True})
+        if len(variables) > 3:
+            var4 = variables[3]
+            if var4 in df.columns:
+                fig4 = px.line(df, x=df.index, y=var4, color='station_name', 
+                              title=labels[var4],
+                              labels={'index': 'Tiempo', var4: labels[var4], 'station_name': 'Estación'})
+                fig4 = create_responsive_chart(fig4)
+                st.plotly_chart(fig4, use_container_width=True, key=f"chart_{var4}", config={'responsive': True})
 
 else:
-    # Mensaje de bienvenida
-    st.markdown("""
-    <div style="text-align: center; padding: 2rem; border-radius: 10px; margin: 1rem 0;">
-        <h3>🚀 ¡Bienvenido al Visualizador de Estaciones Meteorológicas!</h3>
-        <p style="font-size: 1.1rem;">
-            ⚙️ Selecciona al menos una estación en la barra lateral para comenzar a visualizar los datos en tiempo real.
-        </p>
-    </div>
-    """, unsafe_allow_html=True)
+    # Mensaje de bienvenida o instrucciones según el contexto
+    if not stations:
+        st.markdown("""
+        <div style="text-align: center; padding: 2rem; border-radius: 10px; margin: 1rem 0;">
+            <h3>🚀 ¡Bienvenido al Visualizador de Estaciones Meteorológicas!</h3>
+            <p style="font-size: 1.1rem;">
+                ⚙️ Selecciona al menos una estación en la barra lateral para comenzar a visualizar los datos en tiempo real.
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+    elif query_mode == "Rango de fechas" and not load_data:
+        st.markdown("""
+        <div style="text-align: center; padding: 2rem; border-radius: 10px; margin: 1rem 0;">
+            <p style="font-size: 1.1rem;">
+                📅 Selecciona las fechas de inicio y fin, luego presiona el botón <b>'Aplicar fechas'</b> en la barra lateral para cargar los datos.
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+    else:
+        st.info("🔄 Los datos se actualizan automáticamente al cambiar las horas anteriores. Selecciona las estaciones en la barra lateral.")
 
 # CSS para diseño responsive
 st.markdown("""
