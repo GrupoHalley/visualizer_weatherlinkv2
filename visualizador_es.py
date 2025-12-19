@@ -133,6 +133,14 @@ if stations and load_data:
             end_ts = int(datetime.datetime.combine(end_date, datetime.time()).timestamp())
             hist_json = api.get_historic_data(station_id=station_id_str, start_timestamp=start_ts, end_timestamp=end_ts)
         
+        # Corregir timestamp con tz_offset
+        if 'sensors' in hist_json:
+            for sensor in hist_json['sensors']:
+                if 'data' in sensor:
+                    for record in sensor['data']:
+                        if 'ts' in record and 'tz_offset' in record:
+                            record['ts'] += record['tz_offset']
+
         # Parsear datos con la configuración del sensor
         df_i = parse_weather_data(
             hist_json, 

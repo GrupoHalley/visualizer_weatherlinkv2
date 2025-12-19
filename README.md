@@ -5,9 +5,11 @@ A modern and interactive web application built with Streamlit that enables real-
 ## 📋 Features
 
 - **Real-time visualization** of multiple weather stations
-- **Interactive charts** for temperature, humidity, PM2.5 and PM1
+- **Multi-sensor support**: Compatible with AirLink, Vantage Vue, and Vantage Pro2
+- **Interactive charts** for weather and air quality variables
 - **Flexible time selection**: last N hours or specific date range
 - **Station comparison** on the same scales and timeframes
+- **Data Export**: Download processed data in CSV and Excel formats
 - **Intuitive interface** built with Streamlit
 
 ## ☁️ Monitored Variables
@@ -16,6 +18,8 @@ A modern and interactive web application built with Streamlit that enables real-
 - **💧 Humidity (%)**: Relative air humidity
 - **🌫️ PM2.5 (μg/m³)**: Fine particles - air quality
 - **💨 PM1 (μg/m³)**: Ultrafine particles - air quality
+- **🌧️ Rainfall (mm)**: Precipitation accumulation
+- **🌬️ Wind Speed (km/h)**: Wind velocity measurements
 
 ## 🛠️ Local Installation
 
