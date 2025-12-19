@@ -60,7 +60,7 @@ SENSOR_CONFIG = {
 
 # Configuración especial para estaciones específicas
 STATION_SENSOR_OVERRIDE = {
-    "219679": {"AirLink": {"sensor_type": 326, "data_structure_type": 17}},
+    "219678": {"AirLink": {"sensor_type": 326, "data_structure_type": 17}},
     "84759": {"required_sensor": "Vantage Pro2"}  # Solo funciona con Vantage Pro2
 }
 
